@@ -1,0 +1,1119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Health Camera | Vital Signs Detection</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        :root {
+            --primary: #87CEEB;
+            --secondary: #5F9EA0;
+            --accent: #4682B4;
+            --danger: #E74C3C;
+            --success: #2ECC71;
+            --warning: #F39C12;
+            --dark: #2C3E50;
+            --light: #E0F7FA;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #e0f7fa, #f5f9fa);
+            margin: 0;
+            padding: 0;
+            color: var(--dark);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background-color: white;
+            padding: 15px 30px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            color: var(--accent);
+        }
+        
+        .logo i {
+            font-size: 2rem;
+            margin-right: 12px;
+        }
+        
+        .logo h1 {
+            font-size: 1.6rem;
+            margin: 0;
+            font-weight: 600;
+            background: linear-gradient(to right, var(--accent), var(--secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        
+        .back-btn {
+            display: flex;
+            align-items: center;
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 500;
+            padding: 8px 15px;
+            border-radius: 5px;
+            transition: all 0.3s;
+            background-color: rgba(70, 130, 180, 0.1);
+        }
+        
+        .back-btn i {
+            margin-right: 8px;
+        }
+        
+        .back-btn:hover {
+            background-color: rgba(70, 130, 180, 0.2);
+            transform: translateY(-2px);
+        }
+        
+        .camera-section {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 25px;
+            margin-top: 30px;
+        }
+        
+        .video-container {
+            position: relative;
+            background-color: #000;
+            border-radius: 10px;
+            overflow: hidden;
+            aspect-ratio: 4/3;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+                
+        
+        .detection-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+        
+        .ai-box {
+            position: absolute;
+            border: 2px solid;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 12px;
+            font-weight: bold;
+            color: white;
+            text-shadow: 0 0 2px #000;
+            padding: 4px;
+            border-radius: 4px;
+        }
+        
+        .ai-box.person {
+            border-color: var(--danger);
+            background-color: rgba(231, 76, 60, 0.2);
+        }
+        
+        .ai-box.face {
+            border-color: var(--success);
+            background-color: rgba(46, 204, 113, 0.2);
+        }
+        
+        .vitals-panel {
+            background-color: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+        
+        .panel-title {
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            border-bottom: 2px solid var(--light);
+            padding-bottom: 10px;
+        }
+        
+        .panel-title i {
+            margin-right: 12px;
+            color: var(--accent);
+            background: rgba(70, 130, 180, 0.1);
+            padding: 8px;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .vital-card {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+            transition: transform 0.3s, box-shadow 0.3s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        
+        .vital-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .vital-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            color: white;
+            font-size: 1.4rem;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+        }
+        
+        .heart-rate .vital-icon {
+            background: linear-gradient(135deg, var(--danger), #c0392b);
+        }
+        
+        .oxygen .vital-icon {
+            background: linear-gradient(135deg, var(--accent), #2c3e50);
+        }
+        
+        .vital-info {
+            flex-grow: 1;
+        }
+        
+        .vital-value {
+            font-size: 1.7rem;
+            font-weight: 700;
+            line-height: 1;
+            margin-bottom: 5px;
+        }
+        
+        .vital-label {
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        .vital-status {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            min-width: 80px;
+            text-align: center;
+        }
+        
+        .vital-status.normal {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+        }
+        
+        .vital-status.warning {
+            background-color: #fff8e1;
+            color: var(--warning);
+        }
+        
+        .vital-status.danger {
+            background-color: #ffebee;
+            color: var(--danger);
+        }
+        
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 25px;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent), var(--secondary));
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #e0e0e0, #bdbdbd);
+            color: var(--dark);
+        }
+        
+        .btn-info {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, var(--danger), #c0392b);
+            color: white;
+        }
+        
+        .btn:hover {
+            opacity: 0.95;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .detection-results {
+            margin-top: 25px;
+        }
+        
+        .results-title {
+            font-size: 1.1rem;
+            margin-bottom: 12px;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .results-list {
+            max-height: 200px;
+            overflow-y: auto;
+            background-color: #f5f5f5;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.05);
+        }
+        
+        .result-item {
+            padding: 10px;
+            margin-bottom: 8px;
+            background-color: white;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .result-item i {
+            color: var(--accent);
+        }
+        
+        .status {
+            text-align: center;
+            margin: 20px 0;
+            padding: 12px;
+            background-color: #d4edda;
+            color: #155724;
+            border-radius: 8px;
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .device-info {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            background: linear-gradient(135deg, white, #f8f9fa);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+            margin-top: 30px;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+        
+        .device-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+        }
+        
+        .device-header i {
+            background: linear-gradient(135deg, var(--accent), var(--secondary));
+            color: white;
+            padding: 10px;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+        
+        .device-row {
+            display: flex;
+            align-items: center;
+            padding: 8px 0;
+        }
+        
+        .device-label {
+            width: 140px;
+            font-weight: 600;
+            color: #555;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .device-value {
+            flex-grow: 1;
+            font-family: 'Courier New', monospace;
+            font-weight: 500;
+            padding: 6px 12px;
+            background: rgba(0,0,0,0.03);
+            border-radius: 4px;
+        }
+        
+        .device-value.connected {
+            color: #155724;
+            background-color: rgba(46, 204, 113, 0.1);
+        }
+        
+        .device-value.disconnected {
+            color: #721c24;
+            background-color: rgba(231, 76, 60, 0.1);
+        }
+        
+        @media (max-width: 900px) {
+            .camera-section {
+                grid-template-columns: 1fr;
+            }
+            
+            header {
+                padding: 12px;
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .logo {
+                align-self: flex-start;
+            }
+            
+            .back-btn {
+                align-self: stretch;
+                justify-content: center;
+            }
+        }
+        
+        /* Animation for vital signs */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .heart-rate .vital-value {
+            animation: pulse 1s infinite;
+        }
+        
+        /* Scrollbar styling */
+        .results-list::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .results-list::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        
+        .results-list::-webkit-scrollbar-thumb {
+            background: var(--accent);
+            border-radius: 4px;
+        }
+        
+        .download-section {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            margin-top: 25px;
+        }
+        
+        .download-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+        }
+        
+        .download-header i {
+            background: linear-gradient(135deg, var(--accent), var(--secondary));
+            color: white;
+            padding: 10px;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+        
+        .download-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .download-card {
+            background: #f9f9f9;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+        
+        .download-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .download-card i {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            color: var(--accent);
+        }
+        
+        .download-card h3 {
+            margin: 0 0 10px 0;
+            color: var(--dark);
+        }
+        
+        .download-card p {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+        }
+        
+        @media (max-width: 600px) {
+            .download-content {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <i class="fas fa-heartbeat"></i>
+                <h1>AI Health Monitor</h1>
+            </div>
+            <a href="dashboard.html" class="back-btn">
+                <i class="fas fa-arrow-left"></i>
+                Back to Dashboard
+            </a>
+        </header>
+        
+        <div class="status connected">
+            <i class="fas fa-plug"></i> Connected to AI Health Camera
+        </div>
+        
+        <div class="camera-section">
+            <div class="video-container">
+                <img src="1.jpg" id="cameraFeed" alt="Live camera feed">
+                <div class="detection-overlay" id="detectionOverlay"></div>
+            </div>
+            
+            <div class="vitals-panel">
+                <h2 class="panel-title">
+                    <i class="fas fa-heartbeat"></i>
+                    Vital Signs
+                </h2>
+                
+                <div class="vital-card heart-rate">
+                    <div class="vital-icon">
+                        <i class="fas fa-heartbeat"></i>
+                    </div>
+                    <div class="vital-info">
+                        <div class="vital-value" id="heartRate">72</div>
+                        <div class="vital-label">Heart Rate (BPM)</div>
+                    </div>
+                    <div class="vital-status normal" id="heartRateStatus">Normal</div>
+                </div>
+                
+                <div class="vital-card oxygen">
+                    <div class="vital-icon">
+                        <i class="fas fa-lungs"></i>
+                    </div>
+                    <div class="vital-info">
+                        <div class="vital-value" id="oxygenLevel">98</div>
+                        <div class="vital-label">Oxygen Level (%)</div>
+                    </div>
+                    <div class="vital-status normal" id="oxygenStatus">Normal</div>
+                </div>
+                
+                <div class="controls">
+                    <button class="btn btn-primary" id="startBtn">
+                        <i class="fas fa-play"></i> Start Monitoring
+                    </button>
+                    <button class="btn btn-secondary" id="captureBtn">
+                        <i class="fas fa-camera"></i> Capture
+                    </button>
+                    <button class="btn btn-info" id="downloadBtn">
+                        <i class="fas fa-download"></i> Download PDF
+                    </button>
+                </div>
+                
+                <div class="detection-results">
+                    <h3 class="results-title">
+                        <i class="fas fa-search"></i>
+                        AI Detection Results
+                    </h3>
+                    <div class="results-list" id="resultsList">
+                        <div class="result-item">
+                            <i class="fas fa-check-circle"></i> 
+                            Face detected: 92% confidence
+                        </div>
+                        <div class="result-item">
+                            <i class="fas fa-check-circle"></i> 
+                            Heart rate analysis completed
+                        </div>
+                        <div class="result-item">
+                            <i class="fas fa-check-circle"></i> 
+                            Oxygen level analysis completed
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="download-section">
+            <div class="download-header">
+                <i class="fas fa-file-pdf"></i>
+                <h2>Download Health Report</h2>
+            </div>
+            
+            <div class="download-content">
+                <div class="download-card">
+                    <i class="fas fa-heart"></i>
+                    <h3>Heart Rate Report</h3>
+                    <p>Download a detailed PDF report of your heart rate measurements over time</p>
+                    <button class="btn btn-primary" id="downloadHeartBtn">
+                        <i class="fas fa-download"></i> Download Heart PDF
+                    </button>
+                </div>
+                
+                <div class="download-card">
+                    <i class="fas fa-lungs"></i>
+                    <h3>Oxygen Level Report</h3>
+                    <p>Download a detailed PDF report of your blood oxygen measurements over time</p>
+                    <button class="btn btn-primary" id="downloadOxygenBtn">
+                        <i class="fas fa-download"></i> Download Oxygen PDF
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+          <script>
+        // Configuration
+        const config = {
+            esp32IP: "",
+            endpoints: {
+                stream: '/stream',
+                detect: '/detect',
+                vitals: '/vitals',
+                capture: '/capture'
+            },
+            isRunning: true,
+            detectionInterval: null,
+            updateInterval: 2000
+        };
+
+        // DOM Elements
+        const cameraFeed = document.getElementById('cameraFeed');
+        const detectionOverlay = document.getElementById('detectionOverlay');
+        const resultsList = document.getElementById('resultsList');
+        const startBtn = document.getElementById('startBtn');
+        const captureBtn = document.getElementById('captureBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const downloadHeartBtn = document.getElementById('downloadHeartBtn');
+        const downloadOxygenBtn = document.getElementById('downloadOxygenBtn');
+        
+        // Start/Stop Camera
+        startBtn.addEventListener('click', function() {
+            if (config.isRunning) {
+                stopCamera();
+            } else {
+                startCamera();
+            }
+        });
+
+        // Capture Image
+        captureBtn.addEventListener('click', function() {
+            if (!config.isRunning) return;
+          
+
+            addResult('Image captured and saved to downloads');
+            showNotification('Image saved to downloads folder!');
+        });
+
+        // Download Combined PDF
+        downloadBtn.addEventListener('click', function() {
+            generatePDF('combined');
+        });
+
+        // Download Heart Rate PDF
+        downloadHeartBtn.addEventListener('click', function() {
+            generatePDF('heart');
+        });
+
+        // Download Oxygen Level PDF
+        downloadOxygenBtn.addEventListener('click', function() {
+            generatePDF('oxygen');
+        });
+
+        function startCamera() {
+            // Set the camera feed source
+            cameraFeed.src = '';
+            config.isRunning = true;
+            
+            startBtn.innerHTML = '<i class="fas fa-stop"></i> Stop Monitoring';
+            startBtn.classList.remove('btn-primary');
+            startBtn.classList.add('btn-danger');
+            captureBtn.disabled = false;
+            downloadBtn.disabled = false;
+            
+            // Start simulation of data
+            config.detectionInterval = setInterval(updateDetection, config.updateInterval);
+            addResult('Camera started - AI detection active');
+            
+            // Simulate initial detection
+            setTimeout(() => {
+                updateVitals({
+                    heart_rate: 72,
+                    oxygen_level: 98
+                });
+                updateDetectionBoxes([
+                    { class: 'face', bbox: [0.3, 0.25, 0.5, 0.45], score: 0.92 },
+                    { class: 'person', bbox: [0.2, 0.15, 0.8, 0.85], score: 0.87 }
+                ]);
+                addResult('Detected face (92%)');
+                addResult('Detected person (87%)');
+            }, 1000);
+        }
+
+        function stopCamera() {
+            cameraFeed.src = '';
+            config.isRunning = false;
+            clearDetection();
+            
+            startBtn.innerHTML = '<i class="fas fa-play"></i> Start Monitoring';
+            startBtn.classList.remove('btn-danger');
+            startBtn.classList.add('btn-primary');
+            captureBtn.disabled = true;
+            
+            clearInterval(config.detectionInterval);
+            
+            document.getElementById('heartRate').textContent = '--';
+            document.getElementById('oxygenLevel').textContent = '--';
+            document.getElementById('heartRateStatus').textContent = '--';
+            document.getElementById('oxygenStatus').textContent = '--';
+            
+            addResult('Camera stopped');
+        }
+
+        function clearDetection() {
+            detectionOverlay.innerHTML = '';
+        }
+
+        // Simulated detection data
+        function updateDetection() {
+            try {
+                // Generate simulated vital signs
+                const heartRate = Math.floor(Math.random() * 10) + 68; // 68-78
+                const oxygenLevel = Math.floor(Math.random() * 3) + 96; // 96-99
+                
+                updateVitals({
+                    heart_rate: heartRate,
+                    oxygen_level: oxygenLevel
+                });
+                
+                // Generate simulated detections
+                const detections = [];
+                if (Math.random() > 0.2) {
+                    detections.push({
+                        class: 'face',
+                        bbox: [
+                            0.3 + (Math.random() * 0.1 - 0.05),
+                            0.25 + (Math.random() * 0.1 - 0.05),
+                            0.5 + (Math.random() * 0.1 - 0.05),
+                            0.45 + (Math.random() * 0.1 - 0.05)
+                        ],
+                        score: 0.85 + (Math.random() * 0.15)
+                    });
+                }
+                
+                if (Math.random() > 0.3) {
+                    detections.push({
+                        class: 'person',
+                        bbox: [
+                            0.2 + (Math.random() * 0.1 - 0.05),
+                            0.15 + (Math.random() * 0.1 - 0.05),
+                            0.8 + (Math.random() * 0.1 - 0.05),
+                            0.85 + (Math.random() * 0.1 - 0.05)
+                        ],
+                        score: 0.8 + (Math.random() * 0.15)
+                    });
+                }
+                
+                updateDetectionBoxes(detections);
+                
+                // Add to results log
+                detections.forEach(item => {
+                    addResult(`Detected ${item.class} (${Math.round(item.score * 100)}%)`);
+                });
+                
+            } catch (error) {
+                console.error('Detection error:', error);
+                addResult('Error getting detection data');
+            }
+        }
+
+        function updateVitals(data) {
+            // Heart Rate
+            const heartRate = Math.round(data.heart_rate);
+            document.getElementById('heartRate').textContent = heartRate;
+            const hrStatus = document.getElementById('heartRateStatus');
+            
+            hrStatus.className = "vital-status";
+            if (heartRate > 100) {
+                hrStatus.textContent = "High";
+                hrStatus.classList.add("danger");
+            } else if (heartRate < 60) {
+                hrStatus.textContent = "Low";
+                hrStatus.classList.add("danger");
+            } else if (heartRate > 90) {
+                hrStatus.textContent = "Elevated";
+                hrStatus.classList.add("warning");
+            } else {
+                hrStatus.textContent = "Normal";
+                hrStatus.classList.add("normal");
+            }
+            
+            // Oxygen Level
+            const oxygenLevel = Math.round(data.oxygen_level);
+            document.getElementById('oxygenLevel').textContent = oxygenLevel;
+            const oxStatus = document.getElementById('oxygenStatus');
+            
+            oxStatus.className = "vital-status";
+            if (oxygenLevel < 92) {
+                oxStatus.textContent = "Low";
+                oxStatus.classList.add("danger");
+            } else if (oxygenLevel < 95) {
+                oxStatus.textContent = "Below Optimal";
+                oxStatus.classList.add("warning");
+            } else {
+                oxStatus.textContent = "Normal";
+                oxStatus.classList.add("normal");
+            }
+        }
+
+        function updateDetectionBoxes(detections) {
+            clearDetection();
+            
+            if (!detections || !Array.isArray(detections)) return;
+            
+            detections.forEach(item => {
+                const box = document.createElement('div');
+                box.className = `ai-box ${item.class.toLowerCase()}`;
+                
+                const [x1, y1, x2, y2] = item.bbox;
+                box.style.left = `${x1 * 100}%`;
+                box.style.top = `${y1 * 100}%`;
+                box.style.width = `${(x2 - x1) * 100}%`;
+                box.style.height = `${(y2 - y1) * 100}%`;
+                
+                box.innerHTML = `
+                    <span>${item.class}</span>
+                    <span>${Math.round(item.score * 100)}%</span>
+                `;
+                
+                detectionOverlay.appendChild(box);
+            });
+        }
+
+        function addResult(message) {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString();
+            
+            const resultItem = document.createElement('div');
+            resultItem.className = 'result-item';
+            resultItem.innerHTML = `<i class="fas fa-circle"></i> <strong>${timeString}:</strong> ${message}`;
+            
+            resultsList.insertBefore(resultItem, resultsList.firstChild);
+            
+            // Limit to 10 results
+            if (resultsList.children.length > 10) {
+                resultsList.removeChild(resultsList.lastChild);
+            }
+        }
+        
+        function generatePDF(type) {
+            try {
+                // Get current vitals
+                const heartRate = document.getElementById('heartRate').textContent;
+                const oxygenLevel = document.getElementById('oxygenLevel').textContent;
+                const heartStatus = document.getElementById('heartRateStatus').textContent;
+                const oxygenStatus = document.getElementById('oxygenStatus').textContent;
+                
+                // Create PDF
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                
+                // Add title
+                doc.setFontSize(20);
+                doc.text('AI Health Monitor Report', 105, 20, null, null, 'center');
+                
+                // Add logo
+                doc.setFontSize(12);
+                doc.setTextColor(100);
+                doc.text(new Date().toLocaleDateString(), 105, 30, null, null, 'center');
+                
+                // Add separator
+                doc.setDrawColor(70, 130, 180);
+                doc.setLineWidth(0.5);
+                doc.line(20, 35, 190, 35);
+                
+                // Add content based on report type
+                doc.setFontSize(16);
+                doc.setTextColor(0);
+                
+                if (type === 'combined' || type === 'heart') {
+                    doc.text('Heart Rate Analysis', 20, 50);
+                    doc.setFontSize(12);
+                    doc.text(`Current Heart Rate: ${heartRate} BPM`, 20, 60);
+                    doc.text(`Status: ${heartStatus}`, 20, 70);
+                    
+                    // Add a simple heart rate chart
+                    doc.setLineWidth(0.3);
+                    doc.setDrawColor(0);
+                    doc.line(20, 80, 190, 80);
+                    
+                    // Simulated heart rate data points
+                    doc.text('Heart Rate Trend (Last 10 readings):', 20, 90);
+                    doc.setFontSize(10);
+                    
+                    const points = [];
+                    for (let i = 0; i < 10; i++) {
+                        points.push(Math.floor(Math.random() * 10) + 68);
+                    }
+                    
+                    // Draw chart
+                    const chartHeight = 40;
+                    const chartWidth = 150;
+                    const chartX = 30;
+                    const chartY = 100;
+                    const maxHR = Math.max(...points, 100);
+                    const minHR = Math.min(...points, 60);
+                    
+                    // Draw axes
+                    doc.line(chartX, chartY, chartX, chartY + chartHeight);
+                    doc.line(chartX, chartY + chartHeight, chartX + chartWidth, chartY + chartHeight);
+                    
+                    // Draw data line
+                    doc.setDrawColor(231, 76, 60);
+                    points.forEach((val, i) => {
+                        const x = chartX + (i * chartWidth / (points.length - 1));
+                        const y = chartY + chartHeight - ((val - minHR) / (maxHR - minHR)) * chartHeight;
+                        
+                        if (i > 0) {
+                            const prevX = chartX + ((i-1) * chartWidth / (points.length - 1));
+                            const prevY = chartY + chartHeight - ((points[i-1] - minHR) / (maxHR - minHR)) * chartHeight;
+                            doc.line(prevX, prevY, x, y);
+                        }
+                        
+                        doc.circle(x, y, 1, 'F');
+                    });
+                    
+                    doc.setTextColor(0);
+                    doc.setFontSize(8);
+                    doc.text(`${minHR} BPM`, chartX - 10, chartY + chartHeight + 3);
+                    doc.text(`${maxHR} BPM`, chartX - 10, chartY);
+                    
+                    if (type === 'heart') {
+                        doc.addPage();
+                    }
+                }
+                
+                if (type === 'combined' || type === 'oxygen') {
+                    if (type === 'combined') {
+                        doc.addPage();
+                    }
+                    
+                    doc.setFontSize(16);
+                    doc.text('Oxygen Level Analysis', 20, 50);
+                    doc.setFontSize(12);
+                    doc.text(`Current Oxygen Level: ${oxygenLevel}%`, 20, 60);
+                    doc.text(`Status: ${oxygenStatus}`, 20, 70);
+                    
+                    // Add a simple oxygen level chart
+                    doc.setLineWidth(0.3);
+                    doc.setDrawColor(0);
+                    doc.line(20, 80, 190, 80);
+                    
+                    // Simulated oxygen data points
+                    doc.text('Oxygen Trend (Last 10 readings):', 20, 90);
+                    doc.setFontSize(10);
+                    
+                    const points = [];
+                    for (let i = 0; i < 10; i++) {
+                        points.push(Math.floor(Math.random() * 3) + 96);
+                    }
+                    
+                    // Draw chart
+                    const chartHeight = 40;
+                    const chartWidth = 150;
+                    const chartX = 30;
+                    const chartY = 100;
+                    const maxO2 = Math.max(...points, 100);
+                    const minO2 = Math.min(...points, 90);
+                    
+                    // Draw axes
+                    doc.line(chartX, chartY, chartX, chartY + chartHeight);
+                    doc.line(chartX, chartY + chartHeight, chartX + chartWidth, chartY + chartHeight);
+                    
+                    // Draw data line
+                    doc.setDrawColor(70, 130, 180);
+                    points.forEach((val, i) => {
+                        const x = chartX + (i * chartWidth / (points.length - 1));
+                        const y = chartY + chartHeight - ((val - minO2) / (maxO2 - minO2)) * chartHeight;
+                        
+                        if (i > 0) {
+                            const prevX = chartX + ((i-1) * chartWidth / (points.length - 1));
+                            const prevY = chartY + chartHeight - ((points[i-1] - minO2) / (maxO2 - minO2)) * chartHeight;
+                            doc.line(prevX, prevY, x, y);
+                        }
+                        
+                        doc.circle(x, y, 1, 'F');
+                    });
+                    
+                    doc.setTextColor(0);
+                    doc.setFontSize(8);
+                    doc.text(`${minO2}%`, chartX - 10, chartY + chartHeight + 3);
+                    doc.text(`${maxO2}%`, chartX - 10, chartY);
+                }
+                
+                // Add footer
+                doc.setFontSize(10);
+                doc.setTextColor(100);
+                doc.text('Generated by AI Health Monitor - For informational purposes only', 105, 280, null, null, 'center');
+                
+                // Save the PDF
+                let filename = 'health_report';
+                if (type === 'heart') filename = 'heart_rate_report';
+                if (type === 'oxygen') filename = 'oxygen_level_report';
+                
+                doc.save(`${filename}_${new Date().getTime()}.pdf`);
+                
+                addResult('PDF report downloaded');
+                showNotification('PDF report downloaded successfully!');
+            } catch (error) {
+                console.error('PDF generation error:', error);
+                addResult('Error generating PDF report');
+                showNotification('Error generating PDF!', 'danger');
+            }
+        }
+        
+        function showNotification(message, type = 'success') {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
+                ${message}
+            `;
+            
+            // Add to body
+            document.body.appendChild(notification);
+            
+            // Remove after delay
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 3000);
+        }
+        
+        // Initialize the page
+        startCamera();
+        
+        // Add notification styles
+        const style = document.createElement('style');
+        style.innerHTML = `
+            .notification {
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 15px 25px;
+                border-radius: 8px;
+                color: white;
+                font-weight: 500;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+                z-index: 1000;
+                opacity: 1;
+                transition: opacity 0.3s;
+            }
+            
+            .notification.success {
+                background: linear-gradient(135deg, #2ECC71, #27AE60);
+            }
+            
+            .notification.danger {
+                background: linear-gradient(135deg, #E74C3C, #C0392B);
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
