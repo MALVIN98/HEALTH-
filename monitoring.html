@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Health Monitoring</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #87CEEB;
+            --secondary-color: #5F9EA0;
+            --accent-color: #4682B4;
+            --light-color: #E0F7FA;
+            --dark-color: #2C3E50;
+            --danger-color: #E74C3C;
+            --success-color: #2ECC71;
+            --warning-color: #F39C12;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+        
+        body {
+            background-color: #f5f9fa;
+            color: var(--dark-color);
+        }
+        
+        .container {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            min-height: 100vh;
+        }
+        
+        .sidebar {
+            background-color: white;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+            padding: 20px 0;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 30px;
+            color: var(--accent-color);
+        }
+        
+        .logo i {
+            font-size: 2rem;
+            margin-right: 10px;
+        }
+        
+        .logo h2 {
+            font-size: 1.3rem;
+        }
+        
+        .nav-menu {
+            list-style: none;
+        }
+        
+        .nav-item {
+            margin-bottom: 5px;
+        }
+        
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: var(--dark-color);
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        
+        .nav-link i {
+            margin-right: 10px;
+            color: var(--accent-color);
+        }
+        
+        .nav-link:hover, .nav-link.active {
+            background-color: var(--light-color);
+            color: var(--accent-color);
+            border-left: 4px solid var(--accent-color);
+        }
+        
+        .main-content {
+            padding: 20px 30px;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        
+        .page-title h1 {
+            font-size: 1.8rem;
+            color: var(--dark-color);
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+        }
+        
+        .user-info img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        
+        .monitoring-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .monitor-card {
+            background-color: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            text-align: center;
+        }
+        
+        .monitor-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 2rem;
+            color: white;
+        }
+        
+        .heart-rate-icon {
+            background-color: var(--danger-color);
+        }
+        
+        .oxygen-icon {
+            background-color: var(--success-color);
+        }
+        
+        .monitor-value {
+            font-size: 3rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        
+        .monitor-label {
+            font-size: 1.2rem;
+            color: var(--secondary-color);
+            margin-bottom: 15px;
+        }
+        
+        .monitor-status {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        
+        .status-normal {
+            background-color: rgba(46, 204, 113, 0.2);
+            color: var(--success-color);
+        }
+        
+        .status-warning {
+            background-color: rgba(243, 156, 18, 0.2);
+            color: var(--warning-color);
+        }
+        
+        .status-danger {
+            background-color: rgba(231, 76, 60, 0.2);
+            color: var(--danger-color);
+        }
+        
+        .real-time-chart {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            margin-bottom: 30px;
+        }
+        
+        .chart-title {
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+            color: var(--dark-color);
+        }
+        
+        .chart-container {
+            height: 300px;
+            width: 100%;
+            position: relative;
+        }
+        
+        .alert-section {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+        
+        .alert-title {
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+            color: var(--dark-color);
+        }
+        
+        .alert-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            background-color: var(--light-color);
+        }
+        
+        .alert-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            color: white;
+        }
+        
+        .heart-alert {
+            background-color: var(--danger-color);
+        }
+        
+        .oxygen-alert {
+            background-color: var(--warning-color);
+        }
+        
+        .medicine-alert {
+            background-color: var(--accent-color);
+        }
+        
+        .alert-content h4 {
+            font-size: 1rem;
+            margin-bottom: 5px;
+        }
+        
+        .alert-content p {
+            font-size: 0.9rem;
+            color: #777;
+        }
+        
+        .alert-time {
+            margin-left: auto;
+            font-size: 0.9rem;
+            color: var(--dark-color);
+            font-weight: 500;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+            
+            .sidebar {
+                display: none;
+            }
+            
+            .monitoring-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <aside class="sidebar">
+            <div class="logo">
+                <i class="fas fa-heartbeat"></i>
+                <h2>Health Monitor</h2>
+            </div>
+            
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="dashboard.html" class="nav-link">
+                        <i class="fas fa-tachometer-alt"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="monitoring.html" class="nav-link active">
+                        <i class="fas fa-heart"></i>
+                        <span>Health Monitoring</span>
+                    </a>
+                </li>
+
+               <li class="nav-item">
+   		   <a href="camera.html" class="nav-link">
+    		 <i class="fas fa-video"></i>
+        	        <span>Camera Feed</span>
+   			</a>
+		</li>
+
+
+               <li class="nav-item">
+                    <a href="alerts.html" class="nav-link">
+                        <i class="fas fa-bell"></i>
+                        <span>Medicine Alerts</span>
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="medication.html" class="nav-link">
+                        <i class="fas fa-pills"></i>
+                        <span>Medication</span>
+                    </a>
+                </li>
+
+                                <li class="nav-item">
+    			<a href="register.html" class="nav-link" id="logoutBtn">
+    			    <i class="fas fa-sign-out-alt"></i>
+       				 <span>Logout</span>
+    		    </a>
+		</li>
+            </ul>
+        </aside>
+        
+        <main class="main-content">
+            <div class="header">
+                <div class="page-title">
+                    <h1>Health Monitoring</h1>
+                </div>
+                </div>
+            
+            <div class="monitoring-container">
+                <div class="monitor-card">
+                    <div class="monitor-icon heart-rate-icon">
+                        <i class="fas fa-heartbeat"></i>
+                    </div>
+                    <div class="monitor-value" id="currentHeartRate">72</div>
+                    <div class="monitor-label">Heart Rate</div>
+                    <div class="monitor-status status-normal" id="heartRateStatus">Normal</div>
+                </div>
+                
+                <div class="monitor-card">
+                    <div class="monitor-icon oxygen-icon">
+                        <i class="fas fa-lungs"></i>
+                    </div>
+                    <div class="monitor-value" id="currentOxygenLevel">98</div>
+                    <div class="monitor-label">Oxygen Level</div>
+                    <div class="monitor-status status-normal" id="oxygenStatus">Normal</div>
+                </div>
+            </div>
+            
+            <div class="real-time-chart">
+                <h3 class="chart-title">Real-time Monitoring</h3>
+                <div class="chart-container" id="realTimeChart"></div>
+            </div>
+            
+            <div class="alert-section">
+                <h3 class="alert-title">Recent Alerts</h3>
+                
+                <div class="alert-item">
+                    <div class="alert-icon heart-alert">
+                        <i class="fas fa-heartbeat"></i>
+                    </div>
+                    <div class="alert-content">
+                        <h4>High Heart Rate</h4>
+                        <p>Your heart rate exceeded 100 bpm for 5 minutes</p>
+                    </div>
+                    <div class="alert-time">10:45 AM</div>
+                </div>
+                
+                <div class="alert-item">
+                    <div class="alert-icon medicine-alert">
+                        <i class="fas fa-pills"></i>
+                    </div>
+                    <div class="alert-content">
+                        <h4>Medicine Reminder</h4>
+                        <p>Time to take your Metformin (500mg)</p>
+                    </div>
+                    <div class="alert-time">Today, 2:30 PM</div>
+                </div>
+                
+                <div class="alert-item">
+                    <div class="alert-icon oxygen-alert">
+                        <i class="fas fa-lungs"></i>
+                    </div>
+                    <div class="alert-content">
+                        <h4>Low Oxygen Level</h4>
+                        <p>Your SpO2 dropped below 94% for 2 minutes</p>
+                    </div>
+                    <div class="alert-time">Yesterday, 11:20 PM</div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Simulate real-time data updates
+            let heartRateData = Array(20).fill(72);
+            let oxygenData = Array(20).fill(98);
+            let timeLabels = Array(20).fill('').map((_, i) => {
+                const d = new Date();
+                d.setSeconds(d.getSeconds() - (20 - i));
+                return d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'});
+            });
+            
+            // Initialize real-time chart
+            const realTimeCtx = document.createElement('canvas');
+            $('#realTimeChart').append(realTimeCtx);
+            
+            const realTimeChart = new Chart(realTimeCtx, {
+                type: 'line',
+                data: {
+                    labels: timeLabels,
+                    datasets: [
+                        {
+                            label: 'Heart Rate (bpm)',
+                            data: heartRateData,
+                            borderColor: '#E74C3C',
+                            backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                            tension: 0.1,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Oxygen Level (%)',
+                            data: oxygenData,
+                            borderColor: '#2ECC71',
+                            backgroundColor: 'rgba(46, 204, 113, 0.1)',
+                            tension: 0.1,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
+                    },
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: {
+                                display: true,
+                                text: 'Heart Rate (bpm)'
+                            },
+                            min: 50,
+                            max: 120
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            title: {
+                                display: true,
+                                text: 'Oxygen Level (%)'
+                            },
+                            min: 90,
+                            max: 100,
+                            grid: {
+                                drawOnChartArea: false
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Update data in real-time
+            function updateRealTimeData() {
+                // Generate random data within normal ranges with occasional anomalies
+                const newHeartRate = Math.random() > 0.9 ? 
+                    Math.floor(Math.random() * 20) + 100 : // 10% chance of high rate
+                    Math.floor(Math.random() * 15) + 65;  // Normal range
+                
+                const newOxygen = Math.random() > 0.9 ?
+                    Math.floor(Math.random() * 5) + 90 :  // 10% chance of low oxygen
+                    Math.floor(Math.random() * 5) + 95;   // Normal range
+                
+                // Update display values
+                $('#currentHeartRate').text(newHeartRate);
+                $('#currentOxygenLevel').text(newOxygen);
+                
+                // Update status indicators
+                updateStatusIndicator('heartRate', newHeartRate);
+                updateStatusIndicator('oxygen', newOxygen);
+                
+                // Update chart data
+                heartRateData.shift();
+                heartRateData.push(newHeartRate);
+                
+                oxygenData.shift();
+                oxygenData.push(newOxygen);
+                
+                timeLabels.shift();
+                const d = new Date();
+                timeLabels.push(d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'}));
+                
+                realTimeChart.data.labels = timeLabels;
+                realTimeChart.data.datasets[0].data = heartRateData;
+                realTimeChart.data.datasets[1].data = oxygenData;
+                realTimeChart.update();
+                
+                // Check for alerts
+                checkForAlerts(newHeartRate, newOxygen);
+                
+                // Update every 2 seconds
+                setTimeout(updateRealTimeData, 2000);
+            }
+            
+            function updateStatusIndicator(type, value) {
+                let element, normalRange, lowThreshold, highThreshold, statusClass, statusText;
+                
+                if (type === 'heartRate') {
+                    element = $('#heartRateStatus');
+                    normalRange = [60, 100];
+                    lowThreshold = 60;
+                    highThreshold = 100;
+                } else {
+                    element = $('#oxygenStatus');
+                    normalRange = [95, 100];
+                    lowThreshold = 95;
+                    highThreshold = 100;
+                }
+                
+                if (value < normalRange[0]) {
+                    statusClass = 'status-danger';
+                    statusText = 'Low';
+                } else if (value > normalRange[1]) {
+                    statusClass = 'status-danger';
+                    statusText = 'High';
+                } else {
+                    statusClass = 'status-normal';
+                    statusText = 'Normal';
+                }
+                
+                element.removeClass('status-normal status-warning status-danger').addClass(statusClass).text(statusText);
+            }
+            
+            function checkForAlerts(heartRate, oxygen) {
+                // In a real application, this would send alerts to the server or trigger notifications
+                if (heartRate > 100) {
+                    console.log('Alert: High heart rate detected - ' + heartRate + ' bpm');
+                }
+                
+                if (oxygen < 94) {
+                    console.log('Alert: Low oxygen level detected - ' + oxygen + '%');
+                }
+            }
+            
+            // Start real-time updates
+            updateRealTimeData();
+        });
+    </script>
+</body>
+</html>
