@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Health Dashboard - Heart & Oxygen</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary-color: #1a73e8;
+            --secondary-color: #4285f4;
+            --heart-color: #e53935;
+            --oxygen-color: #0f9d58;
+            --light-color: #f8f9fa;
+            --dark-color: #202124;
+            --card-bg: #ffffff;
+            --danger-color: #ea4335;
+            --success-color: #34a853;
+            --warning-color: #fbbc05;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+        
+        body {
+            background-color: var(--light-color);
+            color: var(--dark-color);
+            min-height: 100vh;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.6rem;
+            font-weight: 600;
+        }
+        
+        .logo i {
+            font-size: 2.2rem;
+            color: #fff;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .user-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+        
+        .user-details h2 {
+            font-size: 1.2rem;
+            margin-bottom: 3px;
+        }
+        
+        .user-details p {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        
+        .logout-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        .main-content {
+            padding: 25px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .dashboard-title {
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            color: var(--dark-color);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .dashboard-title i {
+            color: var(--primary-color);
+        }
+        
+        .alert-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .alert {
+            padding: 15px 20px;
+            border-radius: 10px;
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+            background-color: #fff;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        .alert-icon {
+            font-size: 1.5rem;
+            min-width: 30px;
+            padding-top: 3px;
+        }
+        
+        .alert-warning .alert-icon {
+            color: var(--warning-color);
+        }
+        
+        .alert-info .alert-icon {
+            color: var(--secondary-color);
+        }
+        
+        .alert-content h3 {
+            font-size: 1.1rem;
+            margin-bottom: 5px;
+            color: var(--dark-color);
+        }
+        
+        .alert-content p {
+            font-size: 0.95rem;
+            opacity: 0.9;
+            color: #5f6368;
+        }
+        
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        
+        .metric-card {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s, box-shadow 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .metric-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+        }
+        
+        .metric-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .metric-title {
+            font-size: 1.2rem;
+            font-weight: 500;
+            color: var(--dark-color);
+        }
+        
+        .metric-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+        }
+        
+        .heart-rate .metric-icon {
+            background-color: rgba(229, 57, 53, 0.1);
+            color: var(--heart-color);
+        }
+        
+        .oxygen-level .metric-icon {
+            background-color: rgba(15, 157, 88, 0.1);
+            color: var(--oxygen-color);
+        }
+        
+        .metric-value {
+            font-size: 3rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+            line-height: 1;
+        }
+        
+        .heart-rate .metric-value {
+            color: var(--heart-color);
+        }
+        
+        .oxygen-level .metric-value {
+            color: var(--oxygen-color);
+        }
+        
+        .metric-unit {
+            font-size: 1.2rem;
+            font-weight: 500;
+            opacity: 0.7;
+            margin-left: 5px;
+        }
+        
+        .metric-subtext {
+            font-size: 0.95rem;
+            color: #5f6368;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+        
+        .status-normal {
+            background-color: var(--success-color);
+        }
+        
+        .status-warning {
+            background-color: var(--warning-color);
+        }
+        
+        .status-danger {
+            background-color: var(--danger-color);
+        }
+        
+        .chart-container {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            margin-bottom: 30px;
+        }
+        
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+        
+        .chart-title {
+            font-size: 1.3rem;
+            font-weight: 500;
+            color: var(--dark-color);
+        }
+        
+        .chart-actions {
+            display: flex;
+            gap: 12px;
+        }
+        
+        .time-filter {
+            padding: 8px 16px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        
+        .time-filter.active, .time-filter:hover {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+        
+        .chart-canvas {
+            height: 350px;
+            width: 100%;
+        }
+        
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 300px;
+            font-size: 1.2rem;
+            color: #5f6368;
+        }
+        
+        .loading i {
+            margin-right: 10px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .card-footer {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+            font-size: 0.9rem;
+            color: #5f6368;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                text-align: center;
+                gap: 15px;
+                padding: 15px;
+            }
+            
+            .user-info {
+                flex-direction: column;
+            }
+            
+            .main-content {
+                padding: 15px;
+            }
+            
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .chart-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+            
+            .chart-actions {
+                align-self: stretch;
+                justify-content: space-between;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="logo">
+            <i class="fas fa-heartbeat"></i>
+            <span>CardioOxy Monitor</span>
+        </div>
+        
+        <div class="user-info">
+            <div class="user-avatar">
+                <i class="fas fa-user"></i>
+            </div>
+            <div class="user-details">
+                <h2 id="user-name">Loading...</h2>
+                <p id="last-check">Last check: ...</p>
+            </div>
+            <button class="logout-btn" onclick="location.href='/'">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </button>
+        </div>
+    </header>
+    
+    <main class="main-content">
+        <h1 class="dashboard-title">
+            <i class="fas fa-heart"></i> Heart & Oxygen Dashboard
+        </h1>
+        
+        <div class="alert-container" id="alert-container">
+            <!-- Alerts will be inserted here -->
+        </div>
+        
+        <div class="metrics-grid">
+            <div class="metric-card heart-rate">
+                <div class="metric-header">
+                    <h2 class="metric-title">Heart Rate</h2>
+                    <div class="metric-icon">
+                        <i class="fas fa-heart"></i>
+                    </div>
+                </div>
+                <div class="metric-value" id="heart-rate-value">--</div>
+                <span class="metric-unit">bpm</span>
+                
+                <div class="metric-subtext" id="heart-rate-status">
+                    <span class="status-indicator"></span>
+                    <span>Loading status...</span>
+                </div>
+                
+                <div class="card-footer">
+                    <span>Resting: 60-100 bpm</span>
+                    <span>Last update: <span id="heart-rate-time">--:--</span></span>
+                </div>
+            </div>
+            
+            <div class="metric-card oxygen-level">
+                <div class="metric-header">
+                    <h2 class="metric-title">Oxygen Level</h2>
+                    <div class="metric-icon">
+                        <i class="fas fa-lungs"></i>
+                    </div>
+                </div>
+                <div class="metric-value" id="oxygen-level-value">--</div>
+                <span class="metric-unit">%</span>
+                
+                <div class="metric-subtext" id="oxygen-level-status">
+                    <span class="status-indicator"></span>
+                    <span>Loading status...</span>
+                </div>
+                
+                <div class="card-footer">
+                    <span>Normal: 95-100%</span>
+                    <span>Last update: <span id="oxygen-level-time">--:--</span></span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="chart-container">
+            <div class="chart-header">
+                <h2 class="chart-title">Heart Rate & Oxygen Level Trend</h2>
+                <div class="chart-actions">
+                    <button class="time-filter active" data-hours="6">6H</button>
+                    <button class="time-filter" data-hours="12">12H</button>
+                    <button class="time-filter" data-hours="24">24H</button>
+                </div>
+            </div>
+            <div class="chart-canvas">
+                <canvas id="healthChart"></canvas>
+            </div>
+        </div>
+    </main>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // DOM elements
+            const heartRateValue = document.getElementById('heart-rate-value');
+            const oxygenLevelValue = document.getElementById('oxygen-level-value');
+            const heartRateStatus = document.getElementById('heart-rate-status');
+            const oxygenLevelStatus = document.getElementById('oxygen-level-status');
+            const heartRateTime = document.getElementById('heart-rate-time');
+            const oxygenLevelTime = document.getElementById('oxygen-level-time');
+            const alertContainer = document.getElementById('alert-container');
+            const userName = document.getElementById('user-name');
+            const lastCheck = document.getElementById('last-check');
+            
+            // Chart variables
+            let healthChart;
+            let currentData = [];
+            let timeRange = 24; // Default to 24 hours
+            
+            // Fetch health data from API
+            function fetchHealthData() {
+                fetch('/api/health-data')
+                    .then(response => response.json())
+                    .then(data => {
+                        // Update user info
+                        userName.textContent = data.user.name;
+                        lastCheck.textContent = `Last check: ${data.user.last_check}`;
+                        
+                        // Update current metrics
+                        updateCurrentMetrics(data.current);
+                        
+                        // Store full dataset
+                        currentData = data.metrics;
+                        
+                        // Render alerts
+                        renderAlerts(data.alerts);
+                        
+                        // Render chart with current time range
+                        renderChart(timeRange);
+                    })
+                    .catch(error => {
+                        console.error('Error fetching health data:', error);
+                        alertContainer.innerHTML = `
+                            <div class="alert alert-warning">
+                                <div class="alert-icon">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                </div>
+                                <div class="alert-content">
+                                    <h3>Connection Error</h3>
+                                    <p>Failed to load health data. Please check your connection and try again.</p>
+                                </div>
+                            </div>
+                        `;
+                    });
+            }
+            
+            // Update current metrics display
+            function updateCurrentMetrics(metrics) {
+                const now = new Date();
+                const timeString = now.getHours().toString().padStart(2, '0') + ':' + 
+                                 now.getMinutes().toString().padStart(2, '0');
+                
+                // Heart Rate
+                heartRateValue.textContent = metrics.heart_rate;
+                heartRateTime.textContent = timeString;
+                
+                // Set heart rate status
+                let heartRateStatusText, heartRateStatusClass;
+                if (metrics.heart_rate < 60) {
+                    heartRateStatusText = "Bradycardia (Low)";
+                    heartRateStatusClass = "status-warning";
+                } else if (metrics.heart_rate > 100) {
+                    heartRateStatusText = "Tachycardia (High)";
+                    heartRateStatusClass = "status-danger";
+                } else {
+                    heartRateStatusText = "Normal";
+                    heartRateStatusClass = "status-normal";
+                }
+                
+                heartRateStatus.innerHTML = `
+                    <span class="status-indicator ${heartRateStatusClass}"></span>
+                    ${heartRateStatusText}
+                `;
+                
+                // Oxygen Level
+                oxygenLevelValue.textContent = metrics.oxygen_level;
+                oxygenLevelTime.textContent = timeString;
+                
+                // Set oxygen level status
+                let oxygenStatusText, oxygenStatusClass;
+                if (metrics.oxygen_level < 92) {
+                    oxygenStatusText = "Hypoxemia (Low)";
+                    oxygenStatusClass = "status-danger";
+                } else if (metrics.oxygen_level < 95) {
+                    oxygenStatusText = "Below Normal";
+                    oxygenStatusClass = "status-warning";
+                } else {
+                    oxygenStatusText = "Normal";
+                    oxygenStatusClass = "status-normal";
+                }
+                
+                oxygenLevelStatus.innerHTML = `
+                    <span class="status-indicator ${oxygenStatusClass}"></span>
+                    ${oxygenStatusText}
+                `;
+            }
+            
+            // Render alerts
+            function renderAlerts(alerts) {
+                alertContainer.innerHTML = '';
+                
+                alerts.forEach(alert => {
+                    const alertElement = document.createElement('div');
+                    alertElement.className = `alert alert-${alert.type}`;
+                    
+                    let iconClass = 'fas fa-info-circle';
+                    if (alert.type === 'warning') iconClass = 'fas fa-exclamation-triangle';
+                    
+                    alertElement.innerHTML = `
+                        <div class="alert-icon">
+                            <i class="${iconClass}"></i>
+                        </div>
+                        <div class="alert-content">
+                            <h3>Health Alert</h3>
+                            <p>${alert.message}</p>
+                        </div>
+                    `;
+                    
+                    alertContainer.appendChild(alertElement);
+                });
+            }
+            
+            // Render chart with specified time range
+            function renderChart(hours) {
+                timeRange = hours;
+                
+                // Filter data for the selected time range
+                const dataPoints = hours * 6; // 10 min intervals = 6 per hour
+                const filteredData = currentData.slice(0, dataPoints);
+                
+                // Prepare chart data
+                const labels = filteredData.map(item => item.timestamp);
+                const heartRates = filteredData.map(item => item.heart_rate);
+                const oxygenLevels = filteredData.map(item => item.oxygen_level);
+                
+                const ctx = document.getElementById('healthChart').getContext('2d');
+                
+                // Destroy existing chart if it exists
+                if (healthChart) {
+                    healthChart.destroy();
+                }
+                
+                // Create new chart
+                healthChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            {
+                                label: 'Heart Rate (bpm)',
+                                data: heartRates,
+                                borderColor: 'rgba(229, 57, 53, 1)',
+                                backgroundColor: 'rgba(229, 57, 53, 0.1)',
+                                borderWidth: 2,
+                                pointRadius: 3,
+                                pointBackgroundColor: '#fff',
+                                pointBorderWidth: 2,
+                                tension: 0.3,
+                                yAxisID: 'y'
+                            },
+                            {
+                                label: 'Oxygen Level (%)',
+                                data: oxygenLevels,
+                                borderColor: 'rgba(15, 157, 88, 1)',
+                                backgroundColor: 'rgba(15, 157, 88, 0.1)',
+                                borderWidth: 2,
+                                pointRadius: 3,
+                                pointBackgroundColor: '#fff',
+                                pointBorderWidth: 2,
+                                tension: 0.3,
+                                yAxisID: 'y1'
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        interaction: {
+                            mode: 'index',
+                            intersect: false
+                        },
+                        scales: {
+                            x: {
+                                grid: {
+                                    display: false
+                                },
+                                ticks: {
+                                    maxRotation: 0,
+                                    autoSkip: true,
+                                    maxTicksLimit: 12
+                                }
+                            },
+                            y: {
+                                type: 'linear',
+                                display: true,
+                                position: 'left',
+                                title: {
+                                    display: true,
+                                    text: 'Heart Rate (bpm)',
+                                    color: 'rgba(229, 57, 53, 1)'
+                                },
+                                min: 50,
+                                max: 140,
+                                grid: {
+                                    color: 'rgba(0, 0, 0, 0.05)'
+                                }
+                            },
+                            y1: {
+                                type: 'linear',
+                                display: true,
+                                position: 'right',
+                                title: {
+                                    display: true,
+                                    text: 'Oxygen Level (%)',
+                                    color: 'rgba(15, 157, 88, 1)'
+                                },
+                                min: 80,
+                                max: 100,
+                                grid: {
+                                    drawOnChartArea: false
+                                }
+                            }
+                        },
+                        plugins: {
+                            tooltip: {
+                                backgroundColor: 'rgba(32, 33, 36, 0.9)',
+                                padding: 12,
+                                titleFont: {
+                                    size: 14
+                                },
+                                bodyFont: {
+                                    size: 14
+                                },
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.dataset.label || '';
+                                        if (label) {
+                                            label += ': ';
+                                        }
+                                        if (context.parsed.y !== null) {
+                                            label += context.parsed.y;
+                                        }
+                                        return label;
+                                    }
+                                }
+                            },
+                            legend: {
+                                labels: {
+                                    usePointStyle: true,
+                                    padding: 20
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+            
+            // Set up time filter buttons
+            document.querySelectorAll('.time-filter').forEach(button => {
+                button.addEventListener('click', function() {
+                    // Remove active class from all buttons
+                    document.querySelectorAll('.time-filter').forEach(btn => {
+                        btn.classList.remove('active');
+                    });
+                    
+                    // Add active class to clicked button
+                    this.classList.add('active');
+                    
+                    // Get time range from data attribute
+                    const hours = parseInt(this.getAttribute('data-hours'));
+                    
+                    // Render chart with new time range
+                    renderChart(hours);
+                });
+            });
+            
+            // Initial data fetch
+            fetchHealthData();
+            
+            // Refresh data every 30 seconds
+            setInterval(fetchHealthData, 30000);
+        });
+    </script>
+</body>
+</html>
